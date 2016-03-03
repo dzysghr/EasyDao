@@ -1,5 +1,5 @@
 # EasyDao
-用注解和反射实现的orm
+ 使数据库操作简单化
 
 ## 近期更新
 
@@ -36,7 +36,7 @@ public class TestBean
 
 ## 对象关联
 ```
-@Table(name="stu")
+@Table("stu")
 public class student
 {
     @ID
