@@ -24,6 +24,15 @@ public class Util
         mType = t;
     }
 
+
+
+
+    /** 生成对象数据的ContentValue
+     * @param ob 对象
+     * @param withId 是否包括id列
+     * @return ContentValue
+     * @throws IllegalAccessException
+     */
     public ContentValues CreateContentValue(Object ob, boolean withId) throws IllegalAccessException
     {
         ContentValues cv = new ContentValues();
@@ -61,6 +70,11 @@ public class Util
             return cv;
     }
 
+
+    /** 获取对象的id
+     * @param ob 对象
+     * @return id
+     */
     public long getId(Object ob)
     {
         long id = -1;
@@ -94,7 +108,7 @@ public class Util
     }
 
 
-    /** 从cursor 获取各属性值并实例外对象
+    /** 从cursor 读取各属性值并实例化对象
      * @param c  cursor
      * @param <T>  查询结果的对象类型
      * @return 查询结果的对象
@@ -108,7 +122,8 @@ public class Util
 
 
         mTableInfo.getIdField().set(t, c.getLong(0));
-        for (int i = 0; i < cnames.length; i++) {
+        for (int i = 0; i < cnames.length; i++)
+        {
             String typeName = fields.get(i).getType().getSimpleName();
             switch (typeName) {
                 case "int":
@@ -131,7 +146,6 @@ public class Util
                 case "Double":
                     fields.get(i).set(t, c.getDouble(c.getColumnIndex(cnames[i])));
                     break;
-
                 case "String":
                     fields.get(i).set(t, c.getString(c.getColumnIndex(cnames[i])));
                     break;

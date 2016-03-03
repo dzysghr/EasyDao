@@ -45,7 +45,7 @@ public class TableInfo
     }
 
 
-    /** 属性-类型
+    /** 成员名-类型
      * @return map
      */
     public Map<String,Class> getForeignTables()

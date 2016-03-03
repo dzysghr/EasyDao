@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentMap;
  * 增删查改基本操作类
  * Created by dzysg on 2016/2/29 0029.
  */
-public class EasyDAO
+public class EasyDAO<T>
 {
     private static ConcurrentMap<Class<?>, EasyDAO> mDAOMap = new ConcurrentHashMap<>();
 
@@ -34,15 +34,17 @@ public class EasyDAO
     public static void attachContext(Context c)
     {
         mContext = c;
+        new ArrayList<>();
     }
 
-    public static synchronized EasyDAO getInstance(Class<?> type)
+    public static synchronized <Type> EasyDAO<Type> getInstance(Class<?> type)
     {
-        EasyDAO dao = mDAOMap.get(type);
+        EasyDAO<Type> dao = mDAOMap.get(type);
+
         if (dao == null) {
             TableInfo tableInfo = DzyORM.intiTable(type);
             if (tableInfo != null) {
-                dao = new EasyDAO(type,tableInfo);
+                dao = new EasyDAO<>(type,tableInfo);
                 mDAOMap.put(type, dao);
             } else {
                 return null;
@@ -102,7 +104,7 @@ public class EasyDAO
 
 
 
-    public <T> T qureyFirst(String selection, String[] arg)
+    public T qureyFirst(String selection, String[] arg)
     {
         SQLiteDatabase db = getReadableDb();
         Cursor cursor = null;
@@ -110,7 +112,14 @@ public class EasyDAO
         {
             cursor = db.query(mTable.getName(), null, selection, arg, null, null, null, null);
             if (cursor.moveToNext())
-                return mUtil.LoadInstance(cursor);
+            {
+                T t = mUtil.LoadInstance(cursor);
+                if (mTable.haveForeign())
+                {
+                    LoadForeignObject(t);
+                }
+                return t;
+            }
         }
         catch (Exception e) {
             Log.e("easydao", e.getMessage());
@@ -127,22 +136,21 @@ public class EasyDAO
     /** 按条件查询
      * @param selection 查询条件 ，如name=?
      * @param arg 查询参数
-     * @param <T>
      * @return list<T>
      */
-    public <T> List<T> qureyWhere(String selection, String[] arg)
+    public  List<T> qureyWhere(String selection, String[] arg)
     {
         return qureyWhere(selection, arg, null, null);
     }
 
 
-    public <T> T qureyById(long id)
+    public  T qureyById(long id)
     {
         return qureyFirst("ID=?", new String[]{String.valueOf(id)});
     }
 
 
-    public <T> List<T> qureyWhere(String selection, String[] arg, String orderby, String limit)
+    public  List<T> qureyWhere(String selection, String[] arg, String orderby, String limit)
     {
         SQLiteDatabase db = getReadableDb();
 
@@ -153,6 +161,10 @@ public class EasyDAO
         {
             while (cursor.moveToNext()) {
                 T t = mUtil.LoadInstance(cursor);
+                if (mTable.haveForeign())
+                {
+                    LoadForeignObject(t);
+                }
                 list.add(t);
             }
         }
@@ -188,7 +200,7 @@ public class EasyDAO
      * @param ob 要更新的对象
      * @return 成功与否
      */
-    public boolean save(Object ob)
+    public boolean save(T ob)
     {
         if (!checkClass(ob))
             return false;
@@ -217,7 +229,7 @@ public class EasyDAO
      *
      * @param ob 要删除的对象
      */
-    public synchronized boolean delete(Object ob)
+    public synchronized boolean delete(T ob)
     {
         if (!checkClass(ob))
             return false;
@@ -281,48 +293,41 @@ public class EasyDAO
             throw new Exception("ContentValues error,the object should have a constructor without params");
 
 
-        SaveForeignTable(mTable, ob);
+        SaveForeignTable(ob);
     }
 
     /**
      * 将已经拥有id的对象插入
-     *
      * @param ob 实体
-     * @return 成功与否
      */
     private synchronized void performInsert(Object ob) throws Exception
     {
-        SQLiteDatabase db = null;
+
         //将 id 赋值 到实体
-        db = getWritableDb();
+        SQLiteDatabase db = getWritableDb();
         ContentValues cv = mUtil.CreateContentValue(ob, true);
         if (cv != null)
             db.insert(mTable.getName(), null, cv);
         else
             throw new Exception("ContentValues error,the object should have a constructor without params");
 
-        SaveForeignTable(mTable, ob);
+        SaveForeignTable(ob);
 
     }
 
 
     /**
      * 将无id的对象插入，并将生成的id赋值到对象
-     *
      * @param ob 实体
-     * @return
      */
     private synchronized void performInsertNew(Object ob) throws Exception
     {
-        SQLiteDatabase db = null;
-
-        Cursor cursor = null;
 
         //将 id 赋值 到实体
-        db = getWritableDb();
+        SQLiteDatabase db = getWritableDb();
 
         db.insert(mTable.getName(), null, mUtil.CreateContentValue(ob, false));
-        cursor = db.rawQuery("select last_insert_rowid()", new String[0]);
+        Cursor cursor = db.rawQuery("select last_insert_rowid()", new String[0]);
 
         if (cursor.moveToNext()) {
             long id = cursor.getLong(0);
@@ -330,17 +335,15 @@ public class EasyDAO
         }
         cursor.close();
 
-        SaveForeignTable(mTable, ob);
+        SaveForeignTable(ob);
     }
 
-    /** 保存外键关联的表
-     * @param table
-     * @param ob
+    /** 保存关联表的成员
+     * @param ob 对象
      * @throws Exception
      */
-    private void SaveForeignTable(TableInfo table,Object ob) throws  Exception
+    private void SaveForeignTable(Object ob) throws  Exception
     {
-
 
         //处理外表
         if (!mTable.haveForeign()) {
@@ -379,6 +382,45 @@ public class EasyDAO
             }
             else
                 throw new Exception("getDaoInstance failed");
+        }
+    }
+
+    /** 获取外键值
+     * @param type 外键关联表所对应的实体类型
+     * @return id
+     */
+    private long getForeignID(Class type,Object ob)
+    {
+
+        long id = mUtil.getId(ob);
+
+        Cursor cursor = getReadableDb().query(mTable.getName(), new String[]{type.getSimpleName() + "_id"}, "ID=?", new String[]{String.valueOf(id)}, null, null, null);
+        if (cursor.moveToNext())
+        {
+            return cursor.getInt(0);
+        }
+        cursor.close();
+        return -1;
+    }
+
+
+    /** 加载关联外表的成员
+     * @param ob 对象
+     * @throws NoSuchFieldException
+     * @throws IllegalAccessException
+     */
+    private void LoadForeignObject(Object ob) throws NoSuchFieldException, IllegalAccessException
+    {
+        for(Map.Entry<String,Class> entry:mTable.getForeignTables().entrySet())
+        {
+            //先获取外键id
+            long fid = getForeignID(entry.getValue(), ob);
+            if (fid<0)
+                continue;
+            //通过id找到外表的这一行,通过这一行数据实例化一个成员对象
+            Object fieldObject = EasyDAO.getInstance(entry.getValue()).qureyById(fid);
+            //赋值
+            ob.getClass().getDeclaredField(entry.getKey()).set(ob,fieldObject);
         }
     }
 
