@@ -41,12 +41,15 @@ public class EasyDAO<T>
     {
         EasyDAO<Type> dao = mDAOMap.get(type);
 
-        if (dao == null) {
+        if (dao == null)
+        {
             TableInfo tableInfo = DzyORM.intiTable(type);
-            if (tableInfo != null) {
-                dao = new EasyDAO<>(type,tableInfo);
+            if (tableInfo != null)
+            {
+                dao = new EasyDAO<>(type, tableInfo);
                 mDAOMap.put(type, dao);
-            } else {
+            } else
+            {
                 return null;
             }
         }
@@ -92,7 +95,9 @@ public class EasyDAO<T>
     }
 
 
-    /** 检查类型一致
+    /**
+     * 检查类型一致
+     *
      * @param ob 实体
      * @return 一致与否
      */
@@ -101,7 +106,6 @@ public class EasyDAO<T>
 
         return ob.getClass() == mDaoType;
     }
-
 
 
     public T qureyFirst(String selection, String[] arg)
@@ -121,7 +125,8 @@ public class EasyDAO<T>
                 return t;
             }
         }
-        catch (Exception e) {
+        catch (Exception e)
+        {
             Log.e("easydao", e.getMessage());
         }
         finally
@@ -133,24 +138,26 @@ public class EasyDAO<T>
     }
 
 
-    /** 按条件查询
+    /**
+     * 按条件查询
+     *
      * @param selection 查询条件 ，如name=?
-     * @param arg 查询参数
+     * @param arg       查询参数
      * @return list<T>
      */
-    public  List<T> qureyWhere(String selection, String[] arg)
+    public List<T> qureyWhere(String selection, String[] arg)
     {
         return qureyWhere(selection, arg, null, null);
     }
 
 
-    public  T qureyById(long id)
+    public T qureyById(long id)
     {
         return qureyFirst("ID=?", new String[]{String.valueOf(id)});
     }
 
 
-    public  List<T> qureyWhere(String selection, String[] arg, String orderby, String limit)
+    public List<T> qureyWhere(String selection, String[] arg, String orderby, String limit)
     {
         SQLiteDatabase db = getReadableDb();
 
@@ -159,7 +166,8 @@ public class EasyDAO<T>
         List<T> list = new ArrayList<>();
         try
         {
-            while (cursor.moveToNext()) {
+            while (cursor.moveToNext())
+            {
                 T t = mUtil.LoadInstance(cursor);
                 if (mTable.haveForeign())
                 {
@@ -168,7 +176,8 @@ public class EasyDAO<T>
                 list.add(t);
             }
         }
-        catch (Exception e) {
+        catch (Exception e)
+        {
             Log.e("easydao", e.getMessage());
         }
         cursor.close();
@@ -183,11 +192,13 @@ public class EasyDAO<T>
      */
     public boolean insertNew(Object ob)
     {
-        try {
+        try
+        {
             performInsertNew(ob);
             return true;
         }
-        catch (Exception e) {
+        catch (Exception e)
+        {
             Log.e("easydao", e.getMessage());
         }
         return false;
@@ -207,7 +218,8 @@ public class EasyDAO<T>
 
 
         long id = mUtil.getId(ob);
-        try {
+        try
+        {
             if (id < 1)
                 performInsertNew(ob);
             else if (exist(ob))
@@ -217,7 +229,8 @@ public class EasyDAO<T>
 
             return true;
         }
-        catch (Exception e) {
+        catch (Exception e)
+        {
             Log.d("easyDao", e.getMessage());
         }
         return false;
@@ -261,7 +274,6 @@ public class EasyDAO<T>
     }
 
 
-
     private boolean exist(Object ob)
     {
         if (!checkClass(ob))
@@ -271,10 +283,12 @@ public class EasyDAO<T>
         SQLiteDatabase db = getReadableDb();
         Cursor cursor = db.rawQuery("select * from " + mTable.getName() + " where ID=?", new String[]{id});
 
-        if (cursor.moveToNext()) {
+        if (cursor.moveToNext())
+        {
             cursor.close();
             return true;
-        } else {
+        } else
+        {
             cursor.close();
             return false;
         }
@@ -298,6 +312,7 @@ public class EasyDAO<T>
 
     /**
      * 将已经拥有id的对象插入
+     *
      * @param ob 实体
      */
     private synchronized void performInsert(Object ob) throws Exception
@@ -318,6 +333,7 @@ public class EasyDAO<T>
 
     /**
      * 将无id的对象插入，并将生成的id赋值到对象
+     *
      * @param ob 实体
      */
     private synchronized void performInsertNew(Object ob) throws Exception
@@ -329,7 +345,8 @@ public class EasyDAO<T>
         db.insert(mTable.getName(), null, mUtil.CreateContentValue(ob, false));
         Cursor cursor = db.rawQuery("select last_insert_rowid()", new String[0]);
 
-        if (cursor.moveToNext()) {
+        if (cursor.moveToNext())
+        {
             long id = cursor.getLong(0);
             mTable.getIdField().set(ob, id);
         }
@@ -338,29 +355,32 @@ public class EasyDAO<T>
         SaveForeignTable(ob);
     }
 
-    /** 保存关联表的成员
+    /**
+     * 保存关联表的成员
+     *
      * @param ob 对象
      * @throws Exception
      */
-    private void SaveForeignTable(Object ob) throws  Exception
+    private void SaveForeignTable(Object ob) throws Exception
     {
 
         //处理外表
-        if (!mTable.haveForeign()) {
+        if (!mTable.haveForeign())
+        {
             return;
         }
 
-        Map<String,Class> map = mTable.getForeignTables();
-        for (HashMap.Entry<String,Class> entry: map.entrySet())
+        Map<String, Class> map = mTable.getForeignTables();
+        for(HashMap.Entry<String, Class> entry : map.entrySet())
         {
             String fieldname = entry.getKey();
             EasyDAO dao = EasyDAO.getInstance(entry.getValue());
-            if (dao!=null)
+            if (dao != null)
             {
                 Field field = ob.getClass().getDeclaredField(fieldname);
                 field.setAccessible(true);
-                Object foreign  = field.get(ob);
-                if (foreign!=null)
+                Object foreign = field.get(ob);
+                if (foreign != null)
                 {
                     //先保存关联的对象
                     dao.save(foreign);
@@ -370,26 +390,26 @@ public class EasyDAO<T>
                     //获取自己id
                     long id = mUtil.getId(ob);
 
-                    ContentValues cv= new ContentValues();
-                    cv.put(entry.getValue().getSimpleName()+"_id",foreignId);
+                    ContentValues cv = new ContentValues();
+                    cv.put(entry.getValue().getSimpleName() + "_id", foreignId);
 
                     //更新外键
-                    getWritableDb().update(mTable.getName(), cv,"ID=?", new String[]{String.valueOf(id)});
+                    getWritableDb().update(mTable.getName(), cv, "ID=?", new String[]{String.valueOf(id)});
 
-                }
-                else
+                } else
                     throw new Exception("getForeing failed");
-            }
-            else
+            } else
                 throw new Exception("getDaoInstance failed");
         }
     }
 
-    /** 获取外键值
+    /**
+     * 获取外键值
+     *
      * @param type 外键关联表所对应的实体类型
      * @return id
      */
-    private long getForeignID(Class type,Object ob)
+    private long getForeignID(Class type, Object ob)
     {
 
         long id = mUtil.getId(ob);
@@ -404,23 +424,28 @@ public class EasyDAO<T>
     }
 
 
-    /** 加载关联外表的成员
+    /**
+     * 加载关联外表的成员
+     *
      * @param ob 对象
      * @throws NoSuchFieldException
      * @throws IllegalAccessException
      */
     private void LoadForeignObject(Object ob) throws NoSuchFieldException, IllegalAccessException
     {
-        for(Map.Entry<String,Class> entry:mTable.getForeignTables().entrySet())
+        for(Map.Entry<String, Class> entry : mTable.getForeignTables().entrySet())
         {
             //先获取外键id
             long fid = getForeignID(entry.getValue(), ob);
-            if (fid<0)
+            if (fid < 0)
                 continue;
             //通过id找到外表的这一行,通过这一行数据实例化一个成员对象
             Object fieldObject = EasyDAO.getInstance(entry.getValue()).qureyById(fid);
             //赋值
-            ob.getClass().getDeclaredField(entry.getKey()).set(ob,fieldObject);
+            Field field = ob.getClass().getDeclaredField(entry.getKey());
+            field.setAccessible(true);
+            field.set(ob, fieldObject);
+
         }
     }
 
