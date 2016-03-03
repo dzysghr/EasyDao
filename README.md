@@ -69,7 +69,7 @@ public class School
 ## 获取dao对象
 ```
 //一个类全局只有一个dao
-EasyDAO<TestBean> dao = EasyDAO.getInstance(TestBean.class, context);
+EasyDAO<TestBean> dao = EasyDAO.getInstance(TestBean.class);
 ```
 
 ## 操作接口
