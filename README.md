@@ -1,6 +1,14 @@
 # EasyDao
 用注解和反射实现的orm
 
+## 近期更新
+
+
+### 16.03.03
+* 增加泛型支持
+* 增加外键关联（只支持一对多，如学生-老师）
+
+
 # 如何使用
 
 ## 1.定义实体类
@@ -26,10 +34,42 @@ public class TestBean
 
 > 三者不可缺一
 
+## 对象关联
+```
+@Table(name="stu")
+public class student
+{
+    @ID
+    private long id;
+
+    @Column(Name = "name")
+    private String name;
+
+    @Column(Name = "age")
+    private int age;
+
+    @Foreign(TableName="school")
+    private School mSchool;
+}
+
+@Table("school")
+public class School
+{
+    @ID
+    private long id;
+
+    @Column(Name = "name")
+     String Name;
+
+    @Column(Name = "location")
+    String Location;
+}
+```
+
 ## 获取dao对象
 ```
 //一个类全局只有一个dao
-EasyDAO dao = EasyDAO.getInstance(TestBean.class, context);
+EasyDAO<TestBean> dao = EasyDAO.getInstance(TestBean.class, context);
 ```
 
 ## 操作接口
@@ -40,10 +80,9 @@ dao.insertNew(b);
 dao.save(b);
 dao.delete(b);
 dao.deleteAll();
+dao.qureybyId();
 dao.qureyFirst("name=?", new String[]{"dzy"});
 List<TestBean> list = dao.qureyWhere("name=?", new String[]{"dzy"});
 ```
-
 ## TODO
-多表外键联接
-
+优化代码
