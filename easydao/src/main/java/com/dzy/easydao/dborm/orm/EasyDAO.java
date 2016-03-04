@@ -27,14 +27,13 @@ public class EasyDAO<T>
     private Class<?> mDaoType;
     private SQLiteDatabase mWriteDb;
     private SQLiteDatabase mReadDb;
-    private Util mUtil;
+    private Util<T> mUtil;
     private static Context mContext;
 
 
     public static void attachContext(Context c)
     {
         mContext = c;
-        new ArrayList<>();
     }
 
     public static synchronized <Type> EasyDAO<Type> getInstance(Class<?> type)
@@ -63,7 +62,7 @@ public class EasyDAO<T>
         mHelper = DBHelper.getInstance(mContext);
         mHelper.Init(table);
         mDaoType = type;
-        mUtil = new Util(table, type);
+        mUtil = new Util<>(table, type);
     }
 
     public TableInfo getTable()
@@ -117,9 +116,11 @@ public class EasyDAO<T>
             cursor = db.query(mTable.getName(), null, selection, arg, null, null, null, null);
             if (cursor.moveToNext())
             {
+                //实例化对象并赋值
                 T t = mUtil.LoadInstance(cursor);
                 if (mTable.haveForeign())
                 {
+                    //加载关联的成员
                     LoadForeignObject(t);
                 }
                 return t;
@@ -190,7 +191,7 @@ public class EasyDAO<T>
      * @param ob 要插入的对象
      * @return 成功与否
      */
-    public boolean insertNew(Object ob)
+    public boolean insertNew(T ob)
     {
         try
         {
@@ -231,7 +232,7 @@ public class EasyDAO<T>
         }
         catch (Exception e)
         {
-            Log.d("easyDao", e.getMessage());
+            Log.e("easyDao", e.getMessage());
         }
         return false;
     }
@@ -274,7 +275,7 @@ public class EasyDAO<T>
     }
 
 
-    private boolean exist(Object ob)
+    private boolean exist(T ob)
     {
         if (!checkClass(ob))
             return false;
@@ -295,7 +296,7 @@ public class EasyDAO<T>
     }
 
 
-    private synchronized void performUpdate(Object ob) throws Exception
+    private synchronized void performUpdate(T ob) throws Exception
     {
         SQLiteDatabase db = getWritableDb();
 
@@ -312,10 +313,9 @@ public class EasyDAO<T>
 
     /**
      * 将已经拥有id的对象插入
-     *
      * @param ob 实体
      */
-    private synchronized void performInsert(Object ob) throws Exception
+    private synchronized void performInsert(T ob) throws Exception
     {
 
         //将 id 赋值 到实体
@@ -336,7 +336,7 @@ public class EasyDAO<T>
      *
      * @param ob 实体
      */
-    private synchronized void performInsertNew(Object ob) throws Exception
+    private synchronized void performInsertNew(T ob) throws Exception
     {
 
         //将 id 赋值 到实体
@@ -361,6 +361,7 @@ public class EasyDAO<T>
      * @param ob 对象
      * @throws Exception
      */
+
     private void SaveForeignTable(Object ob) throws Exception
     {
 

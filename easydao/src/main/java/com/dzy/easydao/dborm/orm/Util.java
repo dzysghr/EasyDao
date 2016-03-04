@@ -11,7 +11,7 @@ import java.util.List;
  *
  * Created by dzysg on 2016/2/29 0029.
  */
-public class Util
+public class Util<T>
 {
 
     public TableInfo mTableInfo;
@@ -26,14 +26,13 @@ public class Util
 
 
 
-
     /** 生成对象数据的ContentValue
      * @param ob 对象
      * @param withId 是否包括id列
      * @return ContentValue
      * @throws IllegalAccessException
      */
-    public ContentValues CreateContentValue(Object ob, boolean withId) throws IllegalAccessException
+    public ContentValues CreateContentValue(T ob, boolean withId) throws IllegalAccessException
     {
         ContentValues cv = new ContentValues();
         List<Field> fields = mTableInfo.getFields();
@@ -89,19 +88,17 @@ public class Util
 
 
     /** 获取一个的新对象实例
-     * @param <T> 对象类型
      * @return 实例
      */
-    @SuppressWarnings("uncheck")
-    public <T> T NewInstance()
+    public T NewInstance()
     {
         //SugarRecord
         try {
-            Object ob = mType.getDeclaredConstructor().newInstance();
 
-            return (T) ob;
+            return (T)mType.getDeclaredConstructor().newInstance();
         }
         catch (Exception e) {
+            Log.e("tag", "the object should have a  Constructor without params");
             Log.e("tag", e.getMessage());
         }
         return null;
@@ -110,13 +107,12 @@ public class Util
 
     /** 从cursor 读取各属性值并实例化对象
      * @param c  cursor
-     * @param <T>  查询结果的对象类型
      * @return 查询结果的对象
      * @throws IllegalAccessException
      */
-    public <T> T LoadInstance(Cursor c) throws IllegalAccessException
+    public  T  LoadInstance(Cursor c) throws IllegalAccessException
     {
-        T t = this.NewInstance();
+        T t  = this.NewInstance();
         List<Field> fields = mTableInfo.getFields();
         String[] cnames = mTableInfo.getColumnNames();
 

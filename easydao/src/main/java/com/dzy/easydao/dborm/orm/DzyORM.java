@@ -50,9 +50,12 @@ public class DzyORM
             Column column = field.getAnnotation(Column.class);
             if (column != null)
             {
+                //检查类型是否非法
+                if (!CheckType(field.getType()))
+                    continue;
+
                 hasColumn = true;
                 field.setAccessible(true);
-
                 ColumnInfo info = new ColumnInfo();
                 info.setColumnName(column.Name());
                 info.setDBType(TypeConverter.getTypeSTring(field.getType()));
@@ -72,6 +75,10 @@ public class DzyORM
             ID id = field.getAnnotation(ID.class);
             if (id != null)
             {
+                //id一定要为整数型
+                if (!CheckID(field.getType()))
+                    continue;
+
                 hasId = true;
                 field.setAccessible(true);
 
@@ -116,5 +123,37 @@ public class DzyORM
             return null;
     }
 
+    public static boolean CheckType(Class<?> type)
+    {
+        switch (type.getSimpleName())
+        {
+            case "int":
+            case "Integer":
+            case "long":
+            case "Long":
+            case "short":
+            case "Short":
+            case "String":
+            case "float":
+            case "double":
+            case "bype[]":
+                return true;
+        }
+        return false;
+    }
 
+    public static boolean CheckID(Class c)
+    {
+        switch (c.getSimpleName())
+        {
+            case "int":
+            case "Integer":
+            case "long":
+            case "Long":
+            case "short":
+            case "Short":
+                return true;
+        }
+        return false;
+    }
 }
