@@ -4,11 +4,16 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
 
+import com.dzy.easydao.dborm.SqlGenerate.InsertCreator;
+
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,25 +35,25 @@ public class EasyDAO<T>
     private Util<T> mUtil;
     private static Context mContext;
 
-
     public static void attachContext(Context c)
     {
         mContext = c;
     }
 
-    public static synchronized <Type> EasyDAO<Type> getInstance(Class<?> type)
+    public static synchronized <type> EasyDAO<type> getInstance(Class<type> type)
     {
-        EasyDAO<Type> dao = mDAOMap.get(type);
+        EasyDAO<type> dao = mDAOMap.get(type);
 
         if (dao == null)
         {
-            TableInfo tableInfo = DzyORM.intiTable(type);
+            TableInfo tableInfo = TableUtil.intiTable(type);
             if (tableInfo != null)
             {
                 dao = new EasyDAO<>(type, tableInfo);
                 mDAOMap.put(type, dao);
             } else
             {
+                Log.e("easydao", "error type: " + type.getSimpleName() + ",please check the annotation");
                 return null;
             }
         }
@@ -57,7 +62,6 @@ public class EasyDAO<T>
 
     private EasyDAO(Class<?> type, TableInfo table)
     {
-
         mTable = table;
         mHelper = DBHelper.getInstance(mContext);
         mHelper.Init(table);
@@ -81,14 +85,14 @@ public class EasyDAO<T>
 
     private SQLiteDatabase getWritableDb()
     {
-        if (mWriteDb == null || !mWriteDb.isOpen())
+        if (mWriteDb == null)
             mWriteDb = mHelper.getWritableDatabase();
         return mWriteDb;
     }
 
     private SQLiteDatabase getReadableDb()
     {
-        if (mReadDb == null || !mReadDb.isOpen())
+        if (mReadDb == null)
             mReadDb = mHelper.getReadableDatabase();
         return mReadDb;
     }
@@ -188,6 +192,44 @@ public class EasyDAO<T>
     /**
      * 插入新的行，插入后对象 id 被更新
      *
+     * @return 成功与否
+     */
+    public boolean insertNew(Collection<T> list)
+    {
+        SQLiteDatabase db = getWritableDb();
+        String sql = InsertCreator.Create(mTable.getName()).Columns(mTable.getColumnNames()).Build();
+        SQLiteStatement statement = db.compileStatement(sql);
+        try
+        {
+            db.beginTransaction();
+            statement.acquireReference();
+            Iterator<T> in = list.iterator();
+
+            while (in.hasNext())
+            {
+                statement.clearBindings();
+                T ob = in.next();
+                performInsertNew(ob,statement);
+            }
+            db.setTransactionSuccessful();
+            return true;
+        }
+        catch (Exception e)
+        {
+            Log.e("easydao", e.getMessage());
+            return false;
+        }
+        finally
+        {
+            statement.close();
+            db.endTransaction();
+        }
+
+    }
+
+    /**
+     * 插入新的行，插入后对象 id 被更新
+     *
      * @param ob 要插入的对象
      * @return 成功与否
      */
@@ -195,7 +237,8 @@ public class EasyDAO<T>
     {
         try
         {
-            performInsertNew(ob);
+            SQLiteStatement statement = getWritableDb().compileStatement(InsertCreator.Create(mTable.getName()).Columns(mTable.getColumnNames()).Build());
+            performInsertNew(ob, statement);
             return true;
         }
         catch (Exception e)
@@ -203,6 +246,19 @@ public class EasyDAO<T>
             Log.e("easydao", e.getMessage());
         }
         return false;
+    }
+
+
+    public void save(Collection<T> list)
+    {
+        getWritableDb().beginTransaction();
+        Iterator<T> in = list.iterator();
+        while (in.hasNext())
+        {
+            save(in.next());
+        }
+        getWritableDb().setTransactionSuccessful();
+        getWritableDb().endTransaction();
     }
 
 
@@ -217,13 +273,14 @@ public class EasyDAO<T>
         if (!checkClass(ob))
             return false;
 
-
         long id = mUtil.getId(ob);
         try
         {
             if (id < 1)
-                performInsertNew(ob);
-            else if (exist(ob))
+            {
+                SQLiteStatement statement = getWritableDb().compileStatement(InsertCreator.Create(mTable.getName()).Columns(mTable.getColumnNames()).Build());
+                performInsertNew(ob, statement);
+            } else if (exist(ob))
                 performUpdate(ob);
             else
                 performInsert(ob);
@@ -236,7 +293,6 @@ public class EasyDAO<T>
         }
         return false;
     }
-
 
     /**
      * 删除对象
@@ -257,9 +313,11 @@ public class EasyDAO<T>
         }
         try
         {
-            db.delete(mTable.getName(), "ID=?", new String[]{String.valueOf(id)});
+            String sql = "delete from "+mTable.getName()+" where ID = ?";
+            SQLiteStatement statement = db.compileStatement(sql);
+            statement.bindLong(1,id);
+            statement.execute();
             return true;
-
         }
         catch (Exception e)
         {
@@ -271,7 +329,9 @@ public class EasyDAO<T>
     public synchronized void deleteAll()
     {
         SQLiteDatabase db = getWritableDb();
-        db.delete(mTable.getName(), null, null);
+        String sql = "delete from "+mTable.getName();
+        SQLiteStatement statement = db.compileStatement(sql);
+        statement.execute();
     }
 
 
@@ -283,7 +343,6 @@ public class EasyDAO<T>
         String id = String.valueOf(mUtil.getId(ob));
         SQLiteDatabase db = getReadableDb();
         Cursor cursor = db.rawQuery("select * from " + mTable.getName() + " where ID=?", new String[]{id});
-
         if (cursor.moveToNext())
         {
             cursor.close();
@@ -313,6 +372,7 @@ public class EasyDAO<T>
 
     /**
      * 将已经拥有id的对象插入
+     *
      * @param ob 实体
      */
     private synchronized void performInsert(T ob) throws Exception
@@ -320,38 +380,22 @@ public class EasyDAO<T>
 
         //将 id 赋值 到实体
         SQLiteDatabase db = getWritableDb();
-        ContentValues cv = mUtil.CreateContentValue(ob, true);
-        if (cv != null)
-            db.insert(mTable.getName(), null, cv);
-        else
-            throw new Exception("ContentValues error,the object should have a constructor without params");
-
+        SQLiteStatement statement = db.compileStatement(InsertCreator.Create(mTable.getName()).Columns(mTable.getColumnNamesWithID()).Build());
+        setBindWidthID(statement,ob);
+        statement.execute();
         SaveForeignTable(ob);
-
     }
-
 
     /**
      * 将无id的对象插入，并将生成的id赋值到对象
      *
      * @param ob 实体
      */
-    private synchronized void performInsertNew(T ob) throws Exception
+    private synchronized void performInsertNew(T ob, SQLiteStatement statement) throws Exception
     {
-
-        //将 id 赋值 到实体
-        SQLiteDatabase db = getWritableDb();
-
-        db.insert(mTable.getName(), null, mUtil.CreateContentValue(ob, false));
-        Cursor cursor = db.rawQuery("select last_insert_rowid()", new String[0]);
-
-        if (cursor.moveToNext())
-        {
-            long id = cursor.getLong(0);
-            mTable.getIdField().set(ob, id);
-        }
-        cursor.close();
-
+        setBind(statement, ob);
+        long id = statement.executeInsert();
+        mTable.getIdField().set(ob, id);
         SaveForeignTable(ob);
     }
 
@@ -364,16 +408,16 @@ public class EasyDAO<T>
 
     private void SaveForeignTable(Object ob) throws Exception
     {
-
         //处理外表
         if (!mTable.haveForeign())
         {
             return;
         }
-
         Map<String, Class> map = mTable.getForeignTables();
-        for(HashMap.Entry<String, Class> entry : map.entrySet())
+        Iterator<Map.Entry<String, Class>> in = map.entrySet().iterator();
+        while (in.hasNext())
         {
+            Map.Entry<String, Class> entry = in.next();
             String fieldname = entry.getKey();
             EasyDAO dao = EasyDAO.getInstance(entry.getValue());
             if (dao != null)
@@ -446,8 +490,58 @@ public class EasyDAO<T>
             Field field = ob.getClass().getDeclaredField(entry.getKey());
             field.setAccessible(true);
             field.set(ob, fieldObject);
-
         }
     }
 
+
+
+    public void setBind(SQLiteStatement statement, Object ob) throws IOException, IllegalAccessException
+    {
+        int n = mTable.getColumnNames().length;
+        for(int i = 0; i < n; i++)
+        {
+            bind(statement, i + 1, mTable.getFields().get(i).get(ob));
+        }
+    }
+
+    public void setBindWidthID(SQLiteStatement statement, Object ob) throws IOException, IllegalAccessException
+    {
+        int n = mTable.getColumnNames().length;
+        bind(statement,1,mTable.getIdField().get(ob));
+        for(int i = 0; i < n; i++)
+        {
+            bind(statement, i + 2, mTable.getFields().get(i).get(ob));
+        }
+    }
+
+
+    protected void bind(SQLiteStatement mStatement, int i, Object o) throws IOException
+    {
+        if (o == null)
+        {
+            mStatement.bindNull(i);
+        } else if (!(o instanceof CharSequence) && !(o instanceof Boolean) && !(o instanceof Character))
+        {
+            if (!(o instanceof Float) && !(o instanceof Double))
+            {
+                if (o instanceof Number)
+                {
+                    mStatement.bindLong(i, ((Number) o).longValue());
+                } else if (o instanceof byte[])
+                {
+                    mStatement.bindBlob(i, (byte[]) o);
+                } else
+                {
+                    mStatement.bindNull(i);
+                }
+            } else
+            {
+                mStatement.bindDouble(i, ((Number) o).doubleValue());
+            }
+        } else
+        {
+            mStatement.bindString(i, String.valueOf(o));
+        }
+
+    }
 }

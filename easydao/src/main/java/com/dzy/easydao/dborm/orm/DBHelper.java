@@ -1,7 +1,6 @@
 package com.dzy.easydao.dborm.orm;
 
 import android.content.Context;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
@@ -22,9 +21,8 @@ public class DBHelper extends SQLiteOpenHelper
         super(context, name, null, Vertion);
     }
 
-    public static DBHelper getInstance(Context context)
+    public static synchronized DBHelper getInstance(Context context)
     {
-
         // TODO: 2016/2/29 0029 数据库名称和版本号应由配置文件决定
         if (mSingle==null)
         mSingle = new DBHelper(context, "dZYORM", 1);
@@ -36,12 +34,10 @@ public class DBHelper extends SQLiteOpenHelper
     {
         SQLiteDatabase db = getWritableDatabase();
         //查询表是否已经被创建过
-        Cursor cursor = db.rawQuery("select name from sqlite_master where name =?", new String[]{tableInfo.getName()});
-        if (!cursor.moveToNext())
-        {
-            db.execSQL(SqlHelper.getCreateTableSql(tableInfo));
-        }
-        cursor.close();
+        //Cursor cursor = db.rawQuery("select name from sqlite_master where name =?", new String[]{tableInfo.getName()});
+        db.execSQL(SqlHelper.getCreateTableSql(tableInfo));
+        db.close();
+        //cursor.close();
 
     }
 

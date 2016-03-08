@@ -65,7 +65,7 @@ public class TableCreator
         private ColumnBuilder(String n)
         {
             mTableName = n;
-            mSql.append("create table ").append(n).append(" (");
+            mSql.append("create table  IF NOT EXISTS ").append(n).append(" (");
         }
 
         public ColumnBuilder addColums(List<ColumnItem> list)

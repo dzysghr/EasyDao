@@ -19,6 +19,7 @@ public class TypeConverter
                     case "Short":
                         return "Integer";
                     case "String":
+                    case "Character":
                         return "TEXT";
                     case "float":
                     case "double":

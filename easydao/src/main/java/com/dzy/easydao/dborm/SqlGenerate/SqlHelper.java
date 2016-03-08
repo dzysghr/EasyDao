@@ -2,7 +2,7 @@ package com.dzy.easydao.dborm.SqlGenerate;
 
 import com.dzy.easydao.dborm.SqlGenerate.create.TableCreator;
 import com.dzy.easydao.dborm.orm.ColumnInfo;
-import com.dzy.easydao.dborm.orm.DzyORM;
+import com.dzy.easydao.dborm.orm.TableUtil;
 import com.dzy.easydao.dborm.orm.TableInfo;
 
 import java.util.Map;
@@ -32,7 +32,7 @@ public class SqlHelper
 
         for(Map.Entry<String,Class> vk:mTable.getForeignTables().entrySet())
         {
-            TableInfo ftable = DzyORM.intiTable(vk.getValue());
+            TableInfo ftable = TableUtil.intiTable(vk.getValue());
             builder.addForeignKey(vk.getValue().getSimpleName()+"_id","Integer",ftable.getName(),"ID");
         }
 

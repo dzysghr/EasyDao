@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.util.Log;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.List;
 
@@ -23,8 +24,6 @@ public class Util<T>
         mTableInfo = tableInfo;
         mType = t;
     }
-
-
 
     /** 生成对象数据的ContentValue
      * @param ob 对象
@@ -85,20 +84,40 @@ public class Util<T>
         }
         return id;
     }
-
-
     /** 获取一个的新对象实例
      * @return 实例
      */
     public T NewInstance()
     {
         //SugarRecord
-        try {
+        try
+        {
+            Constructor[] cons = mType.getDeclaredConstructors();
+            for(Constructor<?> con:cons)
+            {
+                Class<?>[] cls = con.getParameterTypes();
+                if (cls.length==0)
+                    return (T)con.newInstance();
 
-            return (T)mType.getDeclaredConstructor().newInstance();
+                Object[] parms = new Object[cls.length];
+
+                for(int i = 0; i < parms.length; i++)
+                {
+                    if (cls[i].isPrimitive())
+                    {
+                        if (cls[i]==boolean.class)
+                            parms[i] = false;
+                        else
+                            parms[i] = 0;
+                    }
+                }
+                return (T)con.newInstance(parms);
+
+            }
+            return null;
         }
         catch (Exception e) {
-            Log.e("tag", "the object should have a  Constructor without params");
+            Log.e("tag", "Construct object error");
             Log.e("tag", e.getMessage());
         }
         return null;

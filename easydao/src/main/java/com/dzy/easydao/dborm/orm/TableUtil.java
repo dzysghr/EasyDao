@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentMap;
  *
  * Created by dzysg on 2016/2/25 0025.
  */
-public class DzyORM
+public class TableUtil
 {
 
     private static ConcurrentMap<Class<?>, TableInfo> mTablesCache = new ConcurrentHashMap<>();
@@ -97,7 +97,7 @@ public class DzyORM
             if (foreign != null)
             {
 
-                TableInfo foreignTable = DzyORM.intiTable(field.getType());
+                TableInfo foreignTable = TableUtil.intiTable(field.getType());
                 if (foreignTable != null)
                 {
                     if (foreign.TableName().equals(foreignTable.getName()))
@@ -110,7 +110,6 @@ public class DzyORM
                     {
                         Log.e("easydao", "ForeignTableName not equals Tablename");
                     }
-
                 } else
                     Log.e("easydao", "Foreign field init failed");
             }
