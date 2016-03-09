@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
 
 import com.dzy.easydao.dborm.SqlGenerate.InsertCreator;
+import com.dzy.easydao.dborm.SqlGenerate.UpdateCreator;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -150,7 +151,7 @@ public class EasyDAO<T>
      * @param arg       查询参数
      * @return list<T>
      */
-    public List<T> qureyWhere(String selection, String[] arg)
+    public List<T> qureyWhere(String selection, String... arg)
     {
         return qureyWhere(selection, arg, null, null);
     }
@@ -204,12 +205,11 @@ public class EasyDAO<T>
             db.beginTransaction();
             statement.acquireReference();
             Iterator<T> in = list.iterator();
-
             while (in.hasNext())
             {
                 statement.clearBindings();
                 T ob = in.next();
-                performInsertNew(ob,statement);
+                performInsertNew(ob, statement);
             }
             db.setTransactionSuccessful();
             return true;
@@ -299,38 +299,43 @@ public class EasyDAO<T>
      *
      * @param ob 要删除的对象
      */
-    public synchronized boolean delete(T ob)
+    public void delete(T ob)
     {
         if (!checkClass(ob))
-            return false;
-
-        SQLiteDatabase db = getWritableDb();
+            return;
         long id = mUtil.getId(ob);
         if (id < 1)
         {
             Log.e("easydao", "illegal  id");
-            return false;
+            return;
         }
-        try
+        performDeleteById(id);
+    }
+
+    public void delete(long id)
+    {
+        if (id < 1)
         {
-            String sql = "delete from "+mTable.getName()+" where ID = ?";
-            SQLiteStatement statement = db.compileStatement(sql);
-            statement.bindLong(1,id);
-            statement.execute();
-            return true;
+            Log.e("easydao", "illegal  id");
+            return;
         }
-        catch (Exception e)
-        {
-            Log.e("easydao", e.getMessage());
-        }
-        return false;
+        performDeleteById(id);
     }
 
     public synchronized void deleteAll()
     {
         SQLiteDatabase db = getWritableDb();
-        String sql = "delete from "+mTable.getName();
+        String sql = "delete from " + mTable.getName();
         SQLiteStatement statement = db.compileStatement(sql);
+        statement.execute();
+    }
+
+    public synchronized void performDeleteById(long id)
+    {
+
+        String sql = "delete from " + mTable.getName() + " where ID = ?";
+        SQLiteStatement statement = getWritableDb().compileStatement(sql);
+        statement.bindLong(1, id);
         statement.execute();
     }
 
@@ -340,9 +345,13 @@ public class EasyDAO<T>
         if (!checkClass(ob))
             return false;
 
-        String id = String.valueOf(mUtil.getId(ob));
+        long id = mUtil.getId(ob);
+        if (id < 1)
+            return false;
+
+        String idstr = String.valueOf(id);
         SQLiteDatabase db = getReadableDb();
-        Cursor cursor = db.rawQuery("select * from " + mTable.getName() + " where ID=?", new String[]{id});
+        Cursor cursor = db.rawQuery("select * from " + mTable.getName() + " where ID=?", new String[]{idstr});
         if (cursor.moveToNext())
         {
             cursor.close();
@@ -358,15 +367,10 @@ public class EasyDAO<T>
     private synchronized void performUpdate(T ob) throws Exception
     {
         SQLiteDatabase db = getWritableDb();
-
-        String idsrt = String.valueOf(mUtil.getId(ob));
-        ContentValues cv = mUtil.CreateContentValue(ob, false);
-        if (cv != null)
-            db.update(mTable.getName(), cv, "ID=?", new String[]{idsrt});
-        else
-            throw new Exception("ContentValues error,the object should have a constructor without params");
-
-
+        String sql = UpdateCreator.Update(mTable.getName()).set(mTable.getColumnNames()).where("ID").Build();
+        SQLiteStatement statement = db.compileStatement(sql);
+        setBindEndWidthID(statement, ob);
+        statement.execute();
         SaveForeignTable(ob);
     }
 
@@ -377,11 +381,11 @@ public class EasyDAO<T>
      */
     private synchronized void performInsert(T ob) throws Exception
     {
-
         //将 id 赋值 到实体
         SQLiteDatabase db = getWritableDb();
-        SQLiteStatement statement = db.compileStatement(InsertCreator.Create(mTable.getName()).Columns(mTable.getColumnNamesWithID()).Build());
-        setBindWidthID(statement,ob);
+        String sql = InsertCreator.Create(mTable.getName()).Columns(mTable.getColumnNamesWithID()).Build();
+        SQLiteStatement statement = db.compileStatement(sql);
+        setBindStartWidthID(statement, ob);
         statement.execute();
         SaveForeignTable(ob);
     }
@@ -494,8 +498,7 @@ public class EasyDAO<T>
     }
 
 
-
-    public void setBind(SQLiteStatement statement, Object ob) throws IOException, IllegalAccessException
+    private void setBind(SQLiteStatement statement, Object ob) throws IOException, IllegalAccessException
     {
         int n = mTable.getColumnNames().length;
         for(int i = 0; i < n; i++)
@@ -504,18 +507,28 @@ public class EasyDAO<T>
         }
     }
 
-    public void setBindWidthID(SQLiteStatement statement, Object ob) throws IOException, IllegalAccessException
+    private void setBindStartWidthID(SQLiteStatement statement, Object ob) throws IOException, IllegalAccessException
     {
         int n = mTable.getColumnNames().length;
-        bind(statement,1,mTable.getIdField().get(ob));
+        bind(statement, 1, mTable.getIdField().get(ob));
         for(int i = 0; i < n; i++)
         {
             bind(statement, i + 2, mTable.getFields().get(i).get(ob));
         }
     }
 
+    private void setBindEndWidthID(SQLiteStatement statement, Object ob) throws IOException, IllegalAccessException
+    {
+        int n = mTable.getColumnNames().length;
+        for(int i = 0; i < n; i++)
+        {
+            bind(statement, i + 1, mTable.getFields().get(i).get(ob));
+        }
+        bind(statement, n + 1, mTable.getIdField().get(ob));
+    }
 
-    protected void bind(SQLiteStatement mStatement, int i, Object o) throws IOException
+
+    private void bind(SQLiteStatement mStatement, int i, Object o) throws IOException
     {
         if (o == null)
         {

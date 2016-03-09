@@ -18,16 +18,18 @@ public class TableInfo
      * 不包括 id 列，外键列
      */
     private List<ColumnInfo> mColumns = new ArrayList<>();
-
     private ColumnInfo ID;
     private List<Field> mFields = new ArrayList<>();
     private Field mIdField;
-
+    private String[] ColumnNames;
+    private String[] ColumnNamewithID;
     /**
      *  属性名-属性类型
      */
     private Map<String, Class> mForeignTables = new HashMap<>();
     private Class mType;
+
+
 
     public Class getType()
     {
@@ -43,7 +45,6 @@ public class TableInfo
     {
         return mForeignTables.size()>0;
     }
-
 
     /** 成员名-类型
      * @return map
@@ -81,24 +82,28 @@ public class TableInfo
 
     public String[] getColumnNames()
     {
-        String[] names = new String[mColumns.size()];
-        for (int i = 0; i < names.length; i++) {
-            names[i] = mColumns.get(i).getColumnName();
+        if (ColumnNames==null)
+        {
+            ColumnNames = new String[mColumns.size()];
+            for (int i = 0; i < ColumnNames.length; i++) {
+                ColumnNames[i] = mColumns.get(i).getColumnName();
+            }
         }
-        return names;
+        return ColumnNames;
     }
 
     public String[] getColumnNamesWithID()
     {
-        String[] names = new String[mColumns.size() + 1];
-
-        for (int i = 0; i < names.length; i++) {
-            if (i == 0)
-                names[0] = "ID";
-            else
-                names[i] = mColumns.get(i).getColumnName();
+        if (ColumnNamewithID==null)
+        {
+            ColumnNamewithID = new String[mColumns.size() + 1];
+            ColumnNamewithID[0] = "ID";
+            for (int i =0;i < mColumns.size() ; i++) {
+                ColumnNamewithID[i+1] = mColumns.get(i).getColumnName();
+            }
         }
-        return names;
+
+        return ColumnNamewithID;
     }
 
 
