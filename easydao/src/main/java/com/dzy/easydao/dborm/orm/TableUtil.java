@@ -12,7 +12,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 /**
- *
  * Created by dzysg on 2016/2/25 0025.
  */
 public class TableUtil
@@ -21,7 +20,9 @@ public class TableUtil
     private static ConcurrentMap<Class<?>, TableInfo> mTablesCache = new ConcurrentHashMap<>();
 
 
-    /** 根据类的注解解析出对应的表名，列名，属性名，field，关联的外表名，关联的属性
+    /**
+     * 根据类的注解解析出对应的表名，列名，属性名，field，关联的外表名，关联的属性
+     *
      * @param type 实体类类型
      * @return 表信息
      */
@@ -40,7 +41,12 @@ public class TableUtil
         //获取表名
         Table table = type.getAnnotation(Table.class);
         if (table != null)
-            item.setName(table.value());
+        {
+            if (table.value().equals(""))
+                item.setName(type.getSimpleName());
+            else
+                item.setName(table.value());
+        }
 
 
         Field[] fields = type.getDeclaredFields();
@@ -57,7 +63,13 @@ public class TableUtil
                 hasColumn = true;
                 field.setAccessible(true);
                 ColumnInfo info = new ColumnInfo();
-                info.setColumnName(column.Name());
+
+                if (column.Name().equals(""))
+                    info.setColumnName(field.getName());
+                else
+                    info.setColumnName(column.Name());
+
+
                 info.setDBType(TypeConverter.getTypeSTring(field.getType()));
                 info.setFeildName(field.getName());
                 info.setJavatype(field.getType());
@@ -103,10 +115,9 @@ public class TableUtil
                     if (foreign.TableName().equals(foreignTable.getName()))
                     {
                         foreignTable.setType(field.getType());
-                        item.getForeignTables().put(field.getName(),field.getType());
+                        item.getForeignTables().put(field.getName(), field.getType());
                         mTablesCache.put(field.getType(), foreignTable);
-                    }
-                    else
+                    } else
                     {
                         Log.e("easydao", "ForeignTableName not equals Tablename");
                     }

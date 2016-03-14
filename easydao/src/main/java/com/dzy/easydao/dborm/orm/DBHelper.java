@@ -23,9 +23,8 @@ public class DBHelper extends SQLiteOpenHelper
 
     public static synchronized DBHelper getInstance(Context context)
     {
-        // TODO: 2016/2/29 0029 数据库名称和版本号应由配置文件决定
         if (mSingle==null)
-        mSingle = new DBHelper(context, "dZYORM", 1);
+        mSingle = new DBHelper(context, "EASYORM", 1);
         return mSingle;
     }
 
@@ -33,11 +32,8 @@ public class DBHelper extends SQLiteOpenHelper
     public void Init(TableInfo tableInfo)
     {
         SQLiteDatabase db = getWritableDatabase();
-        //查询表是否已经被创建过
-        //Cursor cursor = db.rawQuery("select name from sqlite_master where name =?", new String[]{tableInfo.getName()});
         db.execSQL(SqlHelper.getCreateTableSql(tableInfo));
         db.close();
-        //cursor.close();
 
     }
 

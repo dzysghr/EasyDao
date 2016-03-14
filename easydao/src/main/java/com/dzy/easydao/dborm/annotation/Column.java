@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Column
 {
-    String Name();
+    String Name() default "";
     boolean isKey() default false;
     boolean CanNull() default true;;
     boolean unique() default false;;

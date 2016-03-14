@@ -252,10 +252,9 @@ public class EasyDAO<T>
     public void save(Collection<T> list)
     {
         getWritableDb().beginTransaction();
-        Iterator<T> in = list.iterator();
-        while (in.hasNext())
+        for(T item:list)
         {
-            save(in.next());
+            save(item);
         }
         getWritableDb().setTransactionSuccessful();
         getWritableDb().endTransaction();
@@ -530,6 +529,7 @@ public class EasyDAO<T>
 
     private void bind(SQLiteStatement mStatement, int i, Object o) throws IOException
     {
+
         if (o == null)
         {
             mStatement.bindNull(i);

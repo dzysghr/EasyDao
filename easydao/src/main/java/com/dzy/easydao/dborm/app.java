@@ -13,6 +13,8 @@ public class app extends Application
     @Override
     public void onCreate()
     {
+        //Bundle b = getApplicationInfo().
+       // String name = b.getString("DBNAME");
         super.onCreate();
         EasyDAO.attachContext(this);
     }
