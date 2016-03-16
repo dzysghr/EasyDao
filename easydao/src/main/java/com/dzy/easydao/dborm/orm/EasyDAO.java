@@ -3,6 +3,7 @@ package com.dzy.easydao.dborm.orm;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
@@ -78,11 +79,19 @@ public class EasyDAO<T>
     public void closeDB()
     {
         if (mWriteDb != null && mWriteDb.isOpen())
+        {
             mWriteDb.close();
-        if (mReadDb != null && mReadDb.isOpen())
-            mReadDb.close();
-    }
+            mWriteDb = null;
+        }
 
+
+        if (mReadDb != null && mReadDb.isOpen())
+        {
+            mReadDb.close();
+            mReadDb = null;
+        }
+
+    }
 
     private SQLiteDatabase getWritableDb()
     {
@@ -252,7 +261,7 @@ public class EasyDAO<T>
     public void save(Collection<T> list)
     {
         getWritableDb().beginTransaction();
-        for(T item:list)
+        for(T item : list)
         {
             save(item);
         }
@@ -350,20 +359,13 @@ public class EasyDAO<T>
 
         String idstr = String.valueOf(id);
         SQLiteDatabase db = getReadableDb();
-        Cursor cursor = db.rawQuery("select * from " + mTable.getName() + " where ID=?", new String[]{idstr});
-        if (cursor.moveToNext())
-        {
-            cursor.close();
-            return true;
-        } else
-        {
-            cursor.close();
-            return false;
-        }
+        SQLiteStatement statement = db.compileStatement("select count(*) from " + mTable.getName() + " where ID=?");
+        id =  DatabaseUtils.longForQuery(statement,new String[]{idstr});
+        return id>0;
     }
 
 
-    private synchronized void performUpdate(T ob) throws Exception
+    private void performUpdate(T ob) throws Exception
     {
         SQLiteDatabase db = getWritableDb();
         String sql = UpdateCreator.Update(mTable.getName()).set(mTable.getColumnNames()).where("ID").Build();
@@ -378,7 +380,7 @@ public class EasyDAO<T>
      *
      * @param ob 实体
      */
-    private synchronized void performInsert(T ob) throws Exception
+    private void performInsert(T ob) throws Exception
     {
         //将 id 赋值 到实体
         SQLiteDatabase db = getWritableDb();
@@ -394,7 +396,7 @@ public class EasyDAO<T>
      *
      * @param ob 实体
      */
-    private synchronized void performInsertNew(T ob, SQLiteStatement statement) throws Exception
+    private void performInsertNew(T ob, SQLiteStatement statement) throws Exception
     {
         setBind(statement, ob);
         long id = statement.executeInsert();
