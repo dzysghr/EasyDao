@@ -3,12 +3,13 @@ package com.dzy.easydao.dborm.orm;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Build;
 
 import com.dzy.easydao.dborm.SqlGenerate.SqlHelper;
 
 
 /**
- *
+ * DBHelper
  * Created by ziyue on 2015/7/15 0015.
  */
 public class DBHelper extends SQLiteOpenHelper
@@ -23,8 +24,12 @@ public class DBHelper extends SQLiteOpenHelper
 
     public static synchronized DBHelper getInstance(Context context)
     {
-        if (mSingle==null)
-        mSingle = new DBHelper(context, "EASYORM", 1);
+        if (mSingle == null)
+        {
+            mSingle = new DBHelper(context, "EASYORM", 1);
+            if (Build.VERSION.SDK_INT >= 16)
+                mSingle.setWriteAheadLoggingEnabled(true);
+        }
         return mSingle;
     }
 

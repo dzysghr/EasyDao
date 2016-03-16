@@ -78,6 +78,7 @@ public class EasyDAO<T>
 
     public void closeDB()
     {
+
         if (mWriteDb != null && mWriteDb.isOpen())
         {
             mWriteDb.close();
@@ -106,7 +107,6 @@ public class EasyDAO<T>
             mReadDb = mHelper.getReadableDatabase();
         return mReadDb;
     }
-
 
     /**
      * 检查类型一致
