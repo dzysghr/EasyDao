@@ -6,7 +6,6 @@ package com.dzy.easydao.dborm.orm;
  */
 public class TypeConverter
 {
-
     public static String getTypeSTring(Class<?> type)
     {
                 switch (type.getSimpleName())
@@ -20,16 +19,20 @@ public class TypeConverter
                         return "Integer";
                     case "String":
                     case "Character":
+                    case "char":
+                    case "boolean":
+                    case "Boolean":
                         return "TEXT";
                     case "float":
                     case "double":
                    return "REAL";
-                    case "bype[]":
+                    case "byte[]":
                         return "Blob";
+
+
                     default:
                         throw new IllegalArgumentException(type.toString()+" is not supported");
                 }
     }
-
 
 }

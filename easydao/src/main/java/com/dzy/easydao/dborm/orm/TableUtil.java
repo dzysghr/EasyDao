@@ -11,7 +11,7 @@ import java.lang.reflect.Field;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-/** table解析
+/** 解析class生成table信息
  * Created by dzysg on 2016/2/25 0025.
  */
 public class TableUtil
@@ -141,14 +141,16 @@ public class TableUtil
     public static boolean CheckType(Class<?> type)
     {
 
-        return type.isPrimitive()||type==Integer.TYPE
+        return type.isPrimitive()||type==Integer.class
                 ||type==Long.TYPE
                 ||type==String.class
                 ||type==Float.TYPE
                 ||type==Double.TYPE
                 ||type==byte[].class
                 ||type==Short.TYPE
-                ||type==Boolean.TYPE;
+                ||type==Boolean.TYPE
+                ||type==Character.class
+                ;
 
     }
 
@@ -165,6 +167,5 @@ public class TableUtil
                 ||c==Long.class
                 ||c==short.class
                 ||c==Short.class;
-
     }
 }

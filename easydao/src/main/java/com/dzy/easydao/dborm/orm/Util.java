@@ -9,6 +9,7 @@ import java.lang.reflect.Field;
 import java.util.List;
 
 /**
+ *  对象工具类
  * Created by dzysg on 2016/2/29 0029.
  */
 public class Util<T>
@@ -18,20 +19,20 @@ public class Util<T>
     public Class mType;
 
 
-    public Util(TableInfo tableInfo, Class t)
+    public Util(TableInfo tableInfo,Class t)
     {
         mTableInfo = tableInfo;
         mType = t;
     }
 
     /**
-     * 生成对象数据的ContentValue
-     *
+     * 生成对象数据的ContentValue,过期
      * @param ob     对象
      * @param withId 是否包括id列
      * @return ContentValue
      * @throws IllegalAccessException
      */
+    @Deprecated
     public ContentValues CreateContentValue(T ob, boolean withId) throws IllegalAccessException
     {
         ContentValues cv = new ContentValues();
@@ -50,19 +51,19 @@ public class Util<T>
 
             if (type == int.class || type == Integer.class)
                 cv.put(cname, (int) fields.get(i).get(ob));
-            else if (type == long.class)
+            else if (type == long.class||type==Long.class)
                 cv.put(cname, (long) fields.get(i).get(ob));
-            else if (type == short.class)
+            else if (type == short.class||type==Short.class)
                 cv.put(cname, (short) fields.get(i).get(ob));
             else if (type == String.class)
-                cv.put(cname, (String) fields.get(i).get(ob));
+                cv.put(cname, (String)fields.get(i).get(ob));
             else if (type == byte.class)
-                cv.put(cname, (byte) fields.get(i).get(ob));
+                cv.put(cname, (byte)fields.get(i).get(ob));
             else if (type == float.class)
                 cv.put(cname, (float) fields.get(i).get(ob));
-            else if (type == double.class)
+            else if (type == double.class||type==Double.class)
                 cv.put(cname, (double) fields.get(i).get(ob));
-            else if (type == Boolean.class)
+            else if (type == Boolean.class||type==boolean.class)
                 cv.put(cname, (Boolean) fields.get(i).get(ob));
             else if (type == byte[].class)
                 cv.put(cname, (byte[]) fields.get(i).get(ob));
@@ -95,6 +96,7 @@ public class Util<T>
      * 获取一个 T 的新实例
      * @return 实例
      */
+    @SuppressWarnings("unchecked")
     public T NewInstance()
     {
         //SugarRecord
@@ -146,7 +148,7 @@ public class Util<T>
         {
             temp = fields.get(i).getType();
             if (temp == int.class || temp == Integer.class)
-                fields.get(i).set(t, c.getInt(c.getColumnIndex(cnames[i])));
+                fields.get(i).set(t,c.getInt(c.getColumnIndex(cnames[i])));
             else if (temp == long.class || temp == Long.class)
                 fields.get(i).set(t, c.getLong(c.getColumnIndex(cnames[i])));
             else if (temp == short.class || temp == Short.class)
@@ -159,8 +161,15 @@ public class Util<T>
                 fields.get(i).set(t, c.getString(c.getColumnIndex(cnames[i])));
             else if (temp == byte[].class || temp == Byte[].class)
                 fields.get(i).set(t, c.getBlob(c.getColumnIndex(cnames[i])));
+            else if(temp==boolean.class||temp==Boolean.class)
+                fields.get(i).set(t,Boolean.valueOf(c.getString(c.getColumnIndex(cnames[i]))));
+            else if(temp==Character.class||temp==char.class)
+            {
+                char ch =  c.getString(c.getColumnIndex(cnames[i])).charAt(0);
+                fields.get(i).set(t,ch);
+            }
             else
-                throw new IllegalArgumentException("get illegal type " + temp.getName());
+                throw new IllegalArgumentException("LoadInstance : illegal type " + temp.getName());
         }
         return t;
     }
