@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
+import android.os.Build;
 import android.util.Log;
 
 import com.dzy.easydao.dborm.SqlGenerate.InsertCreator;
@@ -42,10 +43,10 @@ public class EasyDAO<T>
         mContext = c;
     }
 
+    @SuppressWarnings("unchecked")
     public static synchronized <type> EasyDAO<type> getInstance(Class<type> type)
     {
         EasyDAO<type> dao = mDAOMap.get(type);
-
         if (dao == null)
         {
             TableInfo tableInfo = TableUtil.intiTable(type);
@@ -59,6 +60,7 @@ public class EasyDAO<T>
                 return null;
             }
         }
+
         return dao;
     }
 
@@ -94,7 +96,7 @@ public class EasyDAO<T>
 
     }
 
-    private SQLiteDatabase getWritableDb()
+    public SQLiteDatabase getWritableDb()
     {
         if (mWriteDb == null)
             mWriteDb = mHelper.getWritableDatabase();
@@ -212,13 +214,10 @@ public class EasyDAO<T>
         try
         {
             db.beginTransaction();
-            statement.acquireReference();
-            Iterator<T> in = list.iterator();
-            while (in.hasNext())
+            for(T item :list)
             {
                 statement.clearBindings();
-                T ob = in.next();
-                performInsertNew(ob, statement);
+                performInsertNew(item, statement);
             }
             db.setTransactionSuccessful();
             return true;
@@ -230,7 +229,6 @@ public class EasyDAO<T>
         }
         finally
         {
-            statement.close();
             db.endTransaction();
         }
 
@@ -260,13 +258,25 @@ public class EasyDAO<T>
 
     public void save(Collection<T> list)
     {
-        getWritableDb().beginTransaction();
-        for(T item : list)
+
+
+
+        if (Build.VERSION.SDK_INT >= 16)
+            getWritableDb().beginTransactionNonExclusive();
+        else
+            getWritableDb().beginTransaction();
+        try
         {
-            save(item);
+            for(T item : list)
+            {
+                save(item);
+            }
+            getWritableDb().setTransactionSuccessful();
         }
-        getWritableDb().setTransactionSuccessful();
-        getWritableDb().endTransaction();
+        finally
+        {
+            getWritableDb().endTransaction();
+        }
     }
 
 
@@ -292,7 +302,6 @@ public class EasyDAO<T>
                 performUpdate(ob);
             else
                 performInsert(ob);
-
             return true;
         }
         catch (Exception e)
@@ -324,7 +333,7 @@ public class EasyDAO<T>
     {
         if (id < 1)
         {
-            Log.e("easydao", "illegal  id");
+            Log.e("EasyDao", "illegal  id");
             return;
         }
         performDeleteById(id);
@@ -353,15 +362,13 @@ public class EasyDAO<T>
         if (!checkClass(ob))
             return false;
 
-        long id = mUtil.getId(ob);
-        if (id < 1)
-            return false;
+        long id = 0;
 
         String idstr = String.valueOf(id);
         SQLiteDatabase db = getReadableDb();
         SQLiteStatement statement = db.compileStatement("select count(*) from " + mTable.getName() + " where ID=?");
-        id =  DatabaseUtils.longForQuery(statement,new String[]{idstr});
-        return id>0;
+        id = DatabaseUtils.longForQuery(statement, new String[]{idstr});
+        return id > 0;
     }
 
 
@@ -420,9 +427,8 @@ public class EasyDAO<T>
         }
         Map<String, Class> map = mTable.getForeignTables();
         Iterator<Map.Entry<String, Class>> in = map.entrySet().iterator();
-        while (in.hasNext())
+        for(Map.Entry<String, Class> entry : map.entrySet())
         {
-            Map.Entry<String, Class> entry = in.next();
             String fieldname = entry.getKey();
             EasyDAO dao = EasyDAO.getInstance(entry.getValue());
             if (dao != null)

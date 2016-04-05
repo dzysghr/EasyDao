@@ -26,8 +26,9 @@ public class TypeConverter
                    return "REAL";
                     case "bype[]":
                         return "Blob";
+                    default:
+                        throw new IllegalArgumentException(type.toString()+" is not supported");
                 }
-        return null;
     }
 
 

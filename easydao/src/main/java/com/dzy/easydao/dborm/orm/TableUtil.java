@@ -11,7 +11,7 @@ import java.lang.reflect.Field;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-/**
+/** table解析
  * Created by dzysg on 2016/2/25 0025.
  */
 public class TableUtil
@@ -22,7 +22,6 @@ public class TableUtil
 
     /**
      * 根据类的注解解析出对应的表名，列名，属性名，field，关联的外表名，关联的属性
-     *
      * @param type 实体类类型
      * @return 表信息
      */
@@ -42,6 +41,7 @@ public class TableUtil
         Table table = type.getAnnotation(Table.class);
         if (table != null)
         {
+            //如果没有设置表名，则用类名
             if (table.value().equals(""))
                 item.setName(type.getSimpleName());
             else
@@ -64,11 +64,11 @@ public class TableUtil
                 field.setAccessible(true);
                 ColumnInfo info = new ColumnInfo();
 
+                //如果没有设置表名，则用类名
                 if (column.Name().equals(""))
                     info.setColumnName(field.getName());
                 else
                     info.setColumnName(column.Name());
-
 
                 info.setDBType(TypeConverter.getTypeSTring(field.getType()));
                 info.setFeildName(field.getName());
@@ -133,37 +133,38 @@ public class TableUtil
             return null;
     }
 
+
+    /** 检查类型是否支持
+     * @param type 检查的类型
+     * @return  类型合法则返回true，否则返回False
+     */
     public static boolean CheckType(Class<?> type)
     {
-        switch (type.getSimpleName())
-        {
-            case "int":
-            case "Integer":
-            case "long":
-            case "Long":
-            case "short":
-            case "Short":
-            case "String":
-            case "float":
-            case "double":
-            case "bype[]":
-                return true;
-        }
-        return false;
+
+        return type.isPrimitive()||type==Integer.TYPE
+                ||type==Long.TYPE
+                ||type==String.class
+                ||type==Float.TYPE
+                ||type==Double.TYPE
+                ||type==byte[].class
+                ||type==Short.TYPE
+                ||type==Boolean.TYPE;
+
     }
 
-    public static boolean CheckID(Class c)
+
+    /** ID应该为整型
+     * @param c 类型
+     * @return 如果为整数型则返回true，否则返回false
+     */
+    public static boolean CheckID(Class<?> c)
     {
-        switch (c.getSimpleName())
-        {
-            case "int":
-            case "Integer":
-            case "long":
-            case "Long":
-            case "short":
-            case "Short":
-                return true;
-        }
-        return false;
+        return c==int.class
+                ||c==Integer.class
+                ||c==long.class
+                ||c==Long.class
+                ||c==short.class
+                ||c==Short.class;
+
     }
 }

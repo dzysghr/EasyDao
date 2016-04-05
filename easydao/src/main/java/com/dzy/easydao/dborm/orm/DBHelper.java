@@ -17,7 +17,8 @@ public class DBHelper extends SQLiteOpenHelper
     private String mSqlCreate;
     private static DBHelper mSingle = null;
 
-    private DBHelper(Context context, String name, int Vertion)
+    // TODO: 2016/3/17 0017  暂时为public,测试用
+    public DBHelper(Context context, String name, int Vertion)
     {
         super(context, name, null, Vertion);
     }
@@ -32,7 +33,6 @@ public class DBHelper extends SQLiteOpenHelper
         }
         return mSingle;
     }
-
 
     public void Init(TableInfo tableInfo)
     {
