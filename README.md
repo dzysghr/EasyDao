@@ -29,13 +29,13 @@ public class TestBean
     private int age;
 }
 ```
-> @Table 定义表名
+> @Table 定义表名，默认为类名
 
->  @Column 定义列名
+>  @Column 定义列名，默认为成员名
 
 > @ID 定义对象id,这是区别对象在数据库中的唯一标准
 
-> 三者不可缺一
+> *三者不可缺一*
 
 ## 对象关联
 ```
