@@ -69,6 +69,20 @@ public class School
 }
 ```
 
+## 自定义app并设置Context
+```
+public class app extends Application
+{
+    @Override
+    public void onCreate()
+    {
+        super.onCreate();
+        EasyDAO.attachContext(this);
+        
+    }
+}
+```
+
 ## 获取dao对象
 ```
 //一个类全局只有一个dao
