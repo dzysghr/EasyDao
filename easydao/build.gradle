@@ -18,6 +18,17 @@ android {
     }
 }
 
+//通过在Terminal输入gradlew makeJar 生成jar
+task makeJar(type: Copy) {
+    delete 'build/libs/EasyDao.jar'
+    from('build/intermediates/bundles/release/')
+    into('build/libs/')
+    include('classes.jar')
+    rename ('classes.jar', 'EasyDao.jar')
+}
+
+makeJar.dependsOn(build)
+
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'

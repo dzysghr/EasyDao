@@ -123,7 +123,7 @@ public class EasyDAO<T>
     }
 
 
-    public T qureyFirst(String selection, String[] arg)
+    public T queryFirst(String selection, String... arg)
     {
         SQLiteDatabase db = getReadableDb();
         Cursor cursor = null;
@@ -162,19 +162,19 @@ public class EasyDAO<T>
      * @param arg       查询参数
      * @return list<T>
      */
-    public List<T> qureyWhere(String selection, String... arg)
+    public List<T> queryWhere(String selection, String... arg)
     {
-        return qureyWhere(selection, arg, null, null);
+        return queryWhere(selection, arg, null, null);
     }
 
 
-    public T qureyById(long id)
+    public T queryById(long id)
     {
-        return qureyFirst("ID=?", new String[]{String.valueOf(id)});
+        return queryFirst("ID=?", new String[]{String.valueOf(id)});
     }
 
 
-    public List<T> qureyWhere(String selection, String[] arg, String orderby, String limit)
+    public List<T> queryWhere(String selection, String[] arg, String orderby, String limit)
     {
         SQLiteDatabase db = getReadableDb();
 
@@ -309,6 +309,11 @@ public class EasyDAO<T>
             Log.e("easyDao", e.getMessage());
         }
         return false;
+    }
+
+    public void deleteWhere(String selection,String... arg)
+    {
+        getWritableDb().delete(mTable.getName(),selection,arg);
     }
 
     /**
@@ -496,7 +501,7 @@ public class EasyDAO<T>
             if (fid < 0)
                 continue;
             //通过id找到外表的这一行,通过这一行数据实例化一个成员对象
-            Object fieldObject = EasyDAO.getInstance(entry.getValue()).qureyById(fid);
+            Object fieldObject = EasyDAO.getInstance(entry.getValue()).queryById(fid);
             //赋值
             Field field = ob.getClass().getDeclaredField(entry.getKey());
             field.setAccessible(true);

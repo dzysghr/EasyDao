@@ -1,7 +1,7 @@
 package com.dzy.easydao.dborm.orm;
 
 /**
- *
+ * 将java类型转为sqlite类型
  * Created by dzysg on 2016/2/25 0025.
  */
 public class TypeConverter
@@ -28,8 +28,6 @@ public class TypeConverter
                    return "REAL";
                     case "byte[]":
                         return "Blob";
-
-
                     default:
                         throw new IllegalArgumentException(type.toString()+" is not supported");
                 }

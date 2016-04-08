@@ -19,15 +19,13 @@ public class TableUtil
 
     private static ConcurrentMap<Class<?>, TableInfo> mTablesCache = new ConcurrentHashMap<>();
 
-
     /**
-     * 根据类的注解解析出对应的表名，列名，属性名，field，关联的外表名，关联的属性
+     * 根据类的注解解析出对应的表名，列名，属性名，field，关联的外表名，关联的属性，并保存在TableInfo中
      * @param type 实体类类型
      * @return 表信息
      */
     public static TableInfo intiTable(Class<?> type)
     {
-
         //该类是否已经被解析过
         TableInfo item = mTablesCache.get(type);
         if (item != null)
