@@ -9,7 +9,7 @@
 
 #### 16.03.03
 * 增加泛型支持
-* 增加外键关联（只支持一对多，如学院-学生）
+* 增加外键关联（只支持一对多，如学院-学生）,实验性功能
 
 
 # 如何使用
@@ -88,6 +88,7 @@ public class app extends Application
 //一个类全局只有一个dao
 EasyDAO<TestBean> dao = EasyDAO.getInstance(TestBean.class);
 ```
+> 数据库打开后不会自动关闭，如果确定不再访问数据库，需手动调用EasyDao.CloseDB()来关闭连接
 
 ## 操作接口
 ```
@@ -97,7 +98,7 @@ dao.insertNew(b);
 dao.save(b);
 dao.delete(b);
 dao.deleteAll();
-dao.qureybyId();
+dao.qureybyId(long id);
 dao.qureyFirst("name=?", new String[]{"dzy"});
 List<TestBean> list = dao.qureyWhere("name=?", new String[]{"dzy"});
 ```
