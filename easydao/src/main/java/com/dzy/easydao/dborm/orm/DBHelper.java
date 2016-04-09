@@ -23,6 +23,7 @@ public class DBHelper extends SQLiteOpenHelper
         super(context, name, null, Vertion);
     }
 
+
     public static synchronized DBHelper getInstance(Context context,String dbname,int ver)
     {
         if (mSingle == null)

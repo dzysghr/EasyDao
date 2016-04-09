@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,6 +39,13 @@ public class EasyDAO<T>
     private static  String mDBname;
     private static int DBVersion;
     private static boolean inited = false;
+
+
+    /** 初始化EasyDao，在使用之前确保调用本方法初始化，一次运行且只需调用一次
+     * @param c Context ,activity 或者 App都可以
+     * @param databasename 数据库名字
+     * @param ver 版本
+     */
     public static void init(Context c,String databasename,int ver)
     {
         if (inited)
@@ -48,12 +54,17 @@ public class EasyDAO<T>
             return;
         }
 
-        mContext = c;
+        mContext = c.getApplicationContext();
         mDBname = databasename;
         DBVersion = ver;
         inited=true;
     }
 
+    /** 获取一个对象相关的DAO，同一类型全局只有一个
+     * @param type 对象类型
+     * @param <type> 对象类型
+     * @return EasyDao实例
+     */
     @SuppressWarnings("unchecked")
     public static synchronized <type> EasyDAO<type> getInstance(Class<type> type)
     {
@@ -134,6 +145,25 @@ public class EasyDAO<T>
     }
 
 
+    /** 统计符合条件的对象个数
+     * @param selection 条件语句，如 name=?，可空
+     * @param arg 参数值，顺序要与问号一致，可空
+     * @return 个数
+     */
+    public long Count(String selection,String... arg)
+    {
+        SQLiteDatabase db = getReadableDb();
+        return DatabaseUtils.longForQuery(db,selection,arg);
+    }
+
+
+
+
+    /** 返回符合条件的第一行数据
+     * @param selection 选择条件,用问号代替参数，列如 name=?
+     * @param arg 问号对应的值，顺序要与selection一致
+     * @return 符合条件的第一个对象
+     */
     public T queryFirst(String selection, String... arg)
     {
         SQLiteDatabase db = getReadableDb();
@@ -168,12 +198,22 @@ public class EasyDAO<T>
 
     /**
      * 按条件查询
-     *
      * @param selection 查询条件 ，如name=?
      * @param arg       查询参数
      * @return list<T>
      */
     public List<T> queryWhere(String selection, String... arg)
+    {
+        return queryWhere(selection, arg, null, null);
+    }
+
+    /**
+     * 按条件查询
+     * @param selection 查询条件 ，如name=?
+     * @param arg       查询参数
+     * @return list<T>
+     */
+    public List<T> queryWheres(String selection, String... arg)
     {
         return queryWhere(selection, arg, null, null);
     }
@@ -185,6 +225,13 @@ public class EasyDAO<T>
     }
 
 
+    /** 查询对象
+     * @param selection 查询条件，如 age < ? and name like ?
+     * @param arg 查询条件的参数值，顺序与问号一致
+     * @param orderby 结果按所给的列名排序
+     * @param limit 筛选位置，如 1，10 表示返回第1个到第10个对象
+     * @return 对象集合
+     */
     public List<T> queryWhere(String selection, String[] arg, String orderby, String limit)
     {
         SQLiteDatabase db = getReadableDb();
@@ -267,6 +314,9 @@ public class EasyDAO<T>
     }
 
 
+    /** 保存一组对象，参见{@link EasyDAO#save(Object)}
+     * @param list
+     */
     public void save(Collection<T> list)
     {
 
@@ -292,8 +342,7 @@ public class EasyDAO<T>
 
 
     /**
-     * 若对象 id存在,则更新数据，否则插入新行
-     *
+     * 保存一个对象，若对象 id存在（id>0则算为存在）,则更新数据，否则插入新行
      * @param ob 要更新的对象
      * @return 成功与否
      */
@@ -355,6 +404,10 @@ public class EasyDAO<T>
         performDeleteById(id);
     }
 
+
+    /**
+     * 删除当前类型的所有数据，不包括数据库文件
+     */
     public synchronized void deleteAll()
     {
         SQLiteDatabase db = getWritableDb();
@@ -363,7 +416,7 @@ public class EasyDAO<T>
         statement.execute();
     }
 
-    public synchronized void performDeleteById(long id)
+    private synchronized void performDeleteById(long id)
     {
 
         String sql = "delete from " + mTable.getName() + " where ID = ?";
@@ -442,7 +495,6 @@ public class EasyDAO<T>
             return;
         }
         Map<String, Class> map = mTable.getForeignTables();
-        Iterator<Map.Entry<String, Class>> in = map.entrySet().iterator();
         for(Map.Entry<String, Class> entry : map.entrySet())
         {
             String fieldname = entry.getKey();
