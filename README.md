@@ -77,7 +77,7 @@ public class app extends Application
     public void onCreate()
     {
         super.onCreate();
-        EasyDAO.attachContext(this);
+        EasyDAO.attachContext(this,DBName,version);
         
     }
 }
