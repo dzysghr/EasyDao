@@ -23,11 +23,11 @@ public class DBHelper extends SQLiteOpenHelper
         super(context, name, null, Vertion);
     }
 
-    public static synchronized DBHelper getInstance(Context context)
+    public static synchronized DBHelper getInstance(Context context,String dbname,int ver)
     {
         if (mSingle == null)
         {
-            mSingle = new DBHelper(context, "EASYORM", 1);
+            mSingle = new DBHelper(context,dbname,ver);
             if (Build.VERSION.SDK_INT >= 16)
                 mSingle.setWriteAheadLoggingEnabled(true);
         }
@@ -39,7 +39,6 @@ public class DBHelper extends SQLiteOpenHelper
         SQLiteDatabase db = getWritableDatabase();
         db.execSQL(SqlHelper.getCreateTableSql(tableInfo));
         db.close();
-
     }
 
     @Override

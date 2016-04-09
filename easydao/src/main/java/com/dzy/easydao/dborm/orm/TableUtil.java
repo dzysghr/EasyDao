@@ -127,8 +127,10 @@ public class TableUtil
         {
             mTablesCache.put(type, item);
             return item;
-        } else
+        } else{
+            Log.e("easydao","illegal type: "+type.getName()+",empty column or empty id,check if you have @ID and @column annotation in class");
             return null;
+        }
     }
 
 
@@ -159,11 +161,6 @@ public class TableUtil
      */
     public static boolean CheckID(Class<?> c)
     {
-        return c==int.class
-                ||c==Integer.class
-                ||c==long.class
-                ||c==Long.class
-                ||c==short.class
-                ||c==Short.class;
+        return c==long.class;
     }
 }

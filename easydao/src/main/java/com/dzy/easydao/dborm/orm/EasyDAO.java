@@ -37,10 +37,21 @@ public class EasyDAO<T>
     private SQLiteDatabase mReadDb;
     private Util<T> mUtil;
     private static Context mContext;
-
-    public static void attachContext(Context c)
+    private static  String mDBname;
+    private static int DBVersion;
+    private static boolean inited = false;
+    public static void init(Context c,String databasename,int ver)
     {
+        if (inited)
+        {
+            Log.e("easydao","you had init before");
+            return;
+        }
+
         mContext = c;
+        mDBname = databasename;
+        DBVersion = ver;
+        inited=true;
     }
 
     @SuppressWarnings("unchecked")
@@ -67,7 +78,7 @@ public class EasyDAO<T>
     private EasyDAO(Class<?> type, TableInfo table)
     {
         mTable = table;
-        mHelper = DBHelper.getInstance(mContext);
+        mHelper = DBHelper.getInstance(mContext,mDBname,DBVersion);
         mHelper.Init(table);
         mDaoType = type;
         mUtil = new Util<>(table, type);
@@ -98,14 +109,14 @@ public class EasyDAO<T>
 
     public SQLiteDatabase getWritableDb()
     {
-        if (mWriteDb == null)
+        if (mWriteDb == null||!mWriteDb.isOpen())
             mWriteDb = mHelper.getWritableDatabase();
         return mWriteDb;
     }
 
     private SQLiteDatabase getReadableDb()
     {
-        if (mReadDb == null)
+        if (mReadDb == null||!mReadDb.isOpen())
             mReadDb = mHelper.getReadableDatabase();
         return mReadDb;
     }

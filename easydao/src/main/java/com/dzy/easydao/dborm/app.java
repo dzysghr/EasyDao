@@ -1,6 +1,7 @@
 package com.dzy.easydao.dborm;
 
 import android.app.Application;
+import android.util.Log;
 
 import com.dzy.easydao.dborm.orm.EasyDAO;
 
@@ -13,9 +14,8 @@ public class app extends Application
     @Override
     public void onCreate()
     {
-        //Bundle b = getApplicationInfo().
-       // String name = b.getString("DBNAME");
         super.onCreate();
-        EasyDAO.attachContext(this);
+        Log.i("easydao", "easydao onCreate");
+        EasyDAO.init(this,"EasyDao",1);
     }
 }

@@ -28,7 +28,6 @@ public class SqlHelper
             item.setCanNULL(info.isCanNull());
             builder.addColumn(item);
         }
-        //// TODO: 2016/3/2 0002 增加外键列
 
         for(Map.Entry<String,Class> vk:mTable.getForeignTables().entrySet())
         {

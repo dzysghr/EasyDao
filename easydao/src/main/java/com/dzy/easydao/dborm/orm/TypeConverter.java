@@ -29,7 +29,7 @@ public class TypeConverter
                     case "byte[]":
                         return "Blob";
                     default:
-                        throw new IllegalArgumentException(type.toString()+" is not supported");
+                        throw new IllegalArgumentException(type.toString()+" is not supported by EasyDao");
                 }
     }
 
