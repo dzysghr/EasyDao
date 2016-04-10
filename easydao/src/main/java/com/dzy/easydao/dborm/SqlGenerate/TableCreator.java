@@ -1,14 +1,14 @@
-package com.dzy.easydao.dborm.SqlGenerate.create;
+package com.dzy.easydao.dborm.SqlGenerate;
 
 import android.support.annotation.NonNull;
 
-import com.dzy.easydao.dborm.SqlGenerate.ColumnItem;
 import com.dzy.easydao.dborm.orm.TypeConverter;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
+ *
  * Created by dzysg on 2016/2/25 0025.
  */
 public class TableCreator
@@ -42,7 +42,6 @@ public class TableCreator
         }
         /**
          * 生成创建表语句
-         *
          * @param name 表名
          * @return 列构造器
          */
@@ -66,6 +65,12 @@ public class TableCreator
         {
             mTableName = n;
             mSql.append("create table  IF NOT EXISTS ").append(n).append(" (");
+        }
+
+
+        public ColumnBuilder()
+        {
+
         }
 
         public ColumnBuilder addColums(List<ColumnItem> list)
@@ -154,8 +159,12 @@ public class TableCreator
         }
 
 
-
-
+        @Override
+        public String toString()
+        {
+            mSql.deleteCharAt(mSql.length() - 1);
+            return mSql.toString();
+        }
 
         public TableCreator Build()
         {
@@ -202,9 +211,6 @@ public class TableCreator
             mSql.append(")");
             return new TableCreator(mSql, mTableName);
         }
-
-
-
 
 
         public static class ForeignTable

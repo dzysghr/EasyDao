@@ -9,7 +9,7 @@ import android.database.sqlite.SQLiteStatement;
 import android.os.Build;
 import android.util.Log;
 
-import com.dzy.easydao.dborm.SqlGenerate.InsertCreator;
+import com.dzy.easydao.dborm.SqlGenerate.InsertBuilder;
 import com.dzy.easydao.dborm.SqlGenerate.UpdateCreator;
 
 import java.io.IOException;
@@ -267,7 +267,7 @@ public class EasyDAO<T>
     public boolean insertNew(Collection<T> list)
     {
         SQLiteDatabase db = getWritableDb();
-        String sql = InsertCreator.Create(mTable.getName()).Columns(mTable.getColumnNames()).Build();
+        String sql = InsertBuilder.intoTable(mTable.getName()).ColumnsWithValues(mTable.getColumnNames()).Build();
         SQLiteStatement statement = db.compileStatement(sql);
         try
         {
@@ -302,7 +302,7 @@ public class EasyDAO<T>
     {
         try
         {
-            SQLiteStatement statement = getWritableDb().compileStatement(InsertCreator.Create(mTable.getName()).Columns(mTable.getColumnNames()).Build());
+            SQLiteStatement statement = getWritableDb().compileStatement(InsertBuilder.intoTable(mTable.getName()).ColumnsWithValues(mTable.getColumnNames()).Build());
             performInsertNew(ob, statement);
             return true;
         }
@@ -356,7 +356,7 @@ public class EasyDAO<T>
         {
             if (id < 1)
             {
-                SQLiteStatement statement = getWritableDb().compileStatement(InsertCreator.Create(mTable.getName()).Columns(mTable.getColumnNames()).Build());
+                SQLiteStatement statement = getWritableDb().compileStatement(InsertBuilder.intoTable(mTable.getName()).ColumnsWithValues(mTable.getColumnNames()).Build());
                 performInsertNew(ob, statement);
             } else if (exist(ob))
                 performUpdate(ob);
@@ -460,7 +460,7 @@ public class EasyDAO<T>
     {
         //将 id 赋值 到实体
         SQLiteDatabase db = getWritableDb();
-        String sql = InsertCreator.Create(mTable.getName()).Columns(mTable.getColumnNamesWithID()).Build();
+        String sql = InsertBuilder.intoTable(mTable.getName()).ColumnsWithValues(mTable.getColumnNamesWithID()).Build();
         SQLiteStatement statement = db.compileStatement(sql);
         setBindStartWidthID(statement, ob);
         statement.execute();
@@ -469,7 +469,6 @@ public class EasyDAO<T>
 
     /**
      * 将无id的对象插入，并将生成的id赋值到对象
-     *
      * @param ob 实体
      */
     private void performInsertNew(T ob, SQLiteStatement statement) throws Exception

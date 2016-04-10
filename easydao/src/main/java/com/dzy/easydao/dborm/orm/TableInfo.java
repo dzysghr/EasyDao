@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 表信息类
+ * 表信息类,存放所有关于该表的表名、列名、列对应的成员Field
  * Created by dzysg on 2016/2/25 0025.
  */
 public class TableInfo
@@ -79,6 +79,17 @@ public class TableInfo
     {
         return mColumns;
     }
+
+    public boolean containsConlumn(String name)
+    {
+        for(ColumnInfo item:mColumns)
+        {
+            if (item.getColumnName().equals(name))
+                return true;
+        }
+        return false;
+    }
+
 
     public String[] getColumnNames()
     {
