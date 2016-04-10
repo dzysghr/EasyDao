@@ -221,7 +221,7 @@ public class EasyDAO<T>
 
     public T queryById(long id)
     {
-        return queryFirst("ID=?", new String[]{String.valueOf(id)});
+        return queryFirst("ID=?", String.valueOf(id));
     }
 
 
@@ -319,7 +319,6 @@ public class EasyDAO<T>
      */
     public void save(Collection<T> list)
     {
-
 
 
         if (Build.VERSION.SDK_INT >= 16)

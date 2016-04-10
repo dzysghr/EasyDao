@@ -84,7 +84,7 @@ public class DBHelper extends SQLiteOpenHelper
         //有列要删除
         if (dbcolumn.size()>0)
         {
-            Log.i("easydao","Object's members have changed, "+dbcolumn.size()+" columns will be delete from "+tableInfo.getName());
+            Log.i("easydao","Object's members had changed, "+dbcolumn.size()+" columns will be delete from "+tableInfo.getName());
 
 
             //先创建暂时表

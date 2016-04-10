@@ -6,6 +6,7 @@ import com.dzy.easydao.dborm.SqlGenerate.TableCreator;
 import java.util.Map;
 
 /**
+ *  sql 工具类
  * Created by dzysg on 2016/3/3 0003.
  */
 public class SqlHelper
