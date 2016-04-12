@@ -121,15 +121,14 @@ public class EasyDAO<T>
     public SQLiteDatabase getWritableDb()
     {
         if (mWriteDb == null||!mWriteDb.isOpen())
+        {
             mWriteDb = mHelper.getWritableDatabase();
-        return mWriteDb;
-    }
+            if (Build.VERSION.SDK_INT < 16&&Build.VERSION.SDK_INT>=11)
+                mWriteDb.enableWriteAheadLogging();
+        }
 
-    private SQLiteDatabase getReadableDb()
-    {
-        if (mReadDb == null||!mReadDb.isOpen())
-            mReadDb = mHelper.getReadableDatabase();
-        return mReadDb;
+
+        return mWriteDb;
     }
 
     /**
@@ -152,7 +151,7 @@ public class EasyDAO<T>
      */
     public long Count(String selection,String... arg)
     {
-        SQLiteDatabase db = getReadableDb();
+        SQLiteDatabase db = getWritableDb();
         return DatabaseUtils.longForQuery(db,selection,arg);
     }
 
@@ -166,7 +165,7 @@ public class EasyDAO<T>
      */
     public T queryFirst(String selection, String... arg)
     {
-        SQLiteDatabase db = getReadableDb();
+        SQLiteDatabase db = getWritableDb();
         Cursor cursor = null;
         try
         {
@@ -195,6 +194,14 @@ public class EasyDAO<T>
         return null;
     }
 
+
+    /** 读取所有的数据对象
+     * @return 返回对象List
+     */
+    public List<T> queryAll()
+    {
+        return queryWhere(null,null, null, null);
+    }
 
     /**
      * 按条件查询
@@ -234,7 +241,7 @@ public class EasyDAO<T>
      */
     public List<T> queryWhere(String selection, String[] arg, String orderby, String limit)
     {
-        SQLiteDatabase db = getReadableDb();
+        SQLiteDatabase db = getWritableDb();
 
         Cursor cursor = db.query(mTable.getName(), null, selection, arg, null, null, orderby, limit);
 
@@ -271,6 +278,7 @@ public class EasyDAO<T>
         SQLiteStatement statement = db.compileStatement(sql);
         try
         {
+
             db.beginTransaction();
             for(T item :list)
             {
@@ -320,8 +328,7 @@ public class EasyDAO<T>
     public void save(Collection<T> list)
     {
 
-
-        if (Build.VERSION.SDK_INT >= 16)
+        if (Build.VERSION.SDK_INT >= 11)
             getWritableDb().beginTransactionNonExclusive();
         else
             getWritableDb().beginTransaction();
@@ -433,7 +440,7 @@ public class EasyDAO<T>
         long id = 0;
 
         String idstr = String.valueOf(id);
-        SQLiteDatabase db = getReadableDb();
+        SQLiteDatabase db = getWritableDb();
         SQLiteStatement statement = db.compileStatement("select count(*) from " + mTable.getName() + " where ID=?");
         id = DatabaseUtils.longForQuery(statement, new String[]{idstr});
         return id > 0;
@@ -536,7 +543,7 @@ public class EasyDAO<T>
 
         long id = mUtil.getId(ob);
 
-        Cursor cursor = getReadableDb().query(mTable.getName(), new String[]{type.getSimpleName() + "_id"}, "ID=?", new String[]{String.valueOf(id)}, null, null, null);
+        Cursor cursor = getWritableDb().query(mTable.getName(), new String[]{type.getSimpleName() + "_id"}, "ID=?", new String[]{String.valueOf(id)}, null, null, null);
         if (cursor.moveToNext())
         {
             return cursor.getInt(0);

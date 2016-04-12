@@ -37,6 +37,7 @@ public class DBHelper extends SQLiteOpenHelper
             mSingle = new DBHelper(context,dbname,ver);
             if (Build.VERSION.SDK_INT >= 16)
                 mSingle.setWriteAheadLoggingEnabled(true);
+
         }
         return mSingle;
     }
