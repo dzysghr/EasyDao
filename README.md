@@ -107,6 +107,7 @@ dao.deleteAll();
 dao.qureybyId(long id);
 dao.qureyFirst("name=?", new String[]{"dzy"});
 List<TestBean> list = dao.qureyWhere("name=?", new String[]{"dzy"});
+不断丰富中，不这此一一列出
 ```
 ## TODO
 优化代码
