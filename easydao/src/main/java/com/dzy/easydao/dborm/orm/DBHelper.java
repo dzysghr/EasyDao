@@ -45,8 +45,11 @@ public class DBHelper extends SQLiteOpenHelper
     public void Init(TableInfo tableInfo)
     {
         SQLiteDatabase db = getWritableDatabase();
+        db.beginTransaction();
         db.execSQL(SqlHelper.getCreateTableSql(tableInfo));
+        db.setTransactionSuccessful();
         checkChanges(tableInfo,db);
+        db.endTransaction();
         db.close();
     }
 
