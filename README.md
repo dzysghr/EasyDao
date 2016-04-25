@@ -34,7 +34,7 @@ public class TestBean
     @ID
     private long id;
 
-    @Column(Name = "name")
+    @Column
     private String name;
 
     @Column(Name = "age")
@@ -111,8 +111,8 @@ dao.save(b);
 dao.delete(b);
 dao.deleteAll();
 dao.qureybyId(long id);
-dao.qureyFirst("name=?", new String[]{"dzy"});
-List<TestBean> list = dao.qureyWhere("name=?", new String[]{"dzy"});
+dao.qureyFirst("name=?","dzy");
+List<TestBean> list = dao.qureyWhere("name=?","dzy");
 不断丰富中，不这此一一列出
 ```
 ## TODO
