@@ -2,7 +2,7 @@
  使数据库操作简单化
  
  版本 1.1
- [apk](https://github.com/dzysghr/EasyDao/raw/master/easydao/build/libs/EasyDao-1.1.jar)
+ [jar](https://github.com/dzysghr/EasyDao/raw/master/easydao/build/libs/EasyDao-1.1.jar)
 
 ## 近期更新
 
